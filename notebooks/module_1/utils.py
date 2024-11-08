@@ -1,6 +1,8 @@
+import os
+import tempfile
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders.sitemap import SitemapLoader
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import SKLearnVectorStore
 from langchain_openai import OpenAIEmbeddings
 
 RAG_PROMPT = """You are an assistant for question-answering tasks. 
@@ -15,6 +17,19 @@ Question: {question}
 Answer:"""
 
 def get_vector_db_retriever():
+    persist_path = os.path.join(tempfile.gettempdir(), "union.parquet")
+    embd = OpenAIEmbeddings()
+
+    # If vector store exists, then load it
+    if os.path.exists(persist_path):
+        vectorstore = SKLearnVectorStore(
+            embedding=embd,
+            persist_path=persist_path,
+            serializer="parquet"
+        )
+        return vectorstore.as_retriever(lambda_mult=0)
+
+    # Otherwise, index LangSmith documents and create new vector store
     ls_docs_sitemap_loader = SitemapLoader(web_path="https://docs.smith.langchain.com/sitemap.xml")
     ls_docs = ls_docs_sitemap_loader.load()
 
@@ -23,11 +38,11 @@ def get_vector_db_retriever():
     )
     doc_splits = text_splitter.split_documents(ls_docs)
 
-    embd = OpenAIEmbeddings()
-    vectorstore = Chroma.from_documents(
+    vectorstore = SKLearnVectorStore.from_documents(
         documents=doc_splits,
-        collection_name="rag-chroma",
         embedding=embd,
+        persist_path=persist_path,
+        serializer="parquet"
     )
-    retriever = vectorstore.as_retriever(lambda_mult=0)
-    return retriever
+    vectorstore.persist()
+    return vectorstore.as_retriever(lambda_mult=0)

@@ -8,4 +8,6 @@ langchain-openai
 notebook
 python-dotenv
 lxml
-chromadb
+scikit-learn
+pandas
+pyarrow
