@@ -21,8 +21,8 @@ Follow these instructions to make sure you have all the resources necessary for 
 
 ### Create an environment and install dependencies
 ```
-$ cd langsmith-academy
-$ python3 -m venv ls-academy
-$ source ls-academy/bin/activate
+$ cd intro-to-langsmith
+$ python3 -m venv intro-to-ls
+$ source intro-to-ls/bin/activate
 $ pip install -r requirements.txt
 ```
