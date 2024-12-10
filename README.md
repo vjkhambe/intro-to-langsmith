@@ -11,7 +11,7 @@ In this course we will walk through the fundamentals of LangSmith - exploring ob
 Follow these instructions to make sure you have all the resources necessary for this course!
 
 ### Sign up for LangSmith
-* Sign up [here](https://docs.smith.langchain.com/) 
+* Sign up [here](https://smith.langchain.com/) 
 * Navigate to the Settings page, and generate an API key in LangSmith.
 * Create a .env file that mimics the provided .env.example. Set `LANGCHAIN_API_KEY` in the .env file.
 
@@ -26,6 +26,3 @@ $ python3 -m venv ls-academy
 $ source ls-academy/bin/activate
 $ pip install -r requirements.txt
 ```
-
-### Set environment variables
-Set your environment variables in a local .env file that mimics .env.example
