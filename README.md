@@ -26,3 +26,6 @@ $ python3 -m venv ls-academy
 $ source ls-academy/bin/activate
 $ pip install -r requirements.txt
 ```
+
+### Set environment variables
+Set your environment variables in a local .env file that mimics .env.example

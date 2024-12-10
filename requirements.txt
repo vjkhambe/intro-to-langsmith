@@ -1,7 +1,7 @@
 langgraph
 langgraph-sdk
 langgraph-checkpoint-sqlite
-langsmith
+langsmith>=0.2.0
 langchain-community
 langchain-core
 langchain-openai
