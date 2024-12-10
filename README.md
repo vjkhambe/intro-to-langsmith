@@ -1,6 +1,6 @@
-# LangSmith Academy
+# Intro to LangSmith
 
-Welcome to LangSmith Academy!
+Welcome to Intro to LangSmith!
 
 ## Introduction
 In this course we will walk through the fundamentals of LangSmith - exploring observability, prompt engineering, evaluations, feedback mechanisms, and production monitoring. Take a look at the setup instructions below so you can follow along with any of our notebook examples.
