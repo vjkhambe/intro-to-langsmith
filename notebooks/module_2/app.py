@@ -3,14 +3,13 @@ import tempfile
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders.sitemap import SitemapLoader
 from langchain_community.vectorstores import SKLearnVectorStore
-from langchain_openai import OpenAIEmbeddings
 from langsmith import traceable
-from openai import OpenAI
 from typing import List
 import nest_asyncio
+#from common_genai_utils.geminihelper import 
+from common_genai_utils.llmhelper import get_llm, get_retriever, retrieve_docs
 
-MODEL_NAME = "gpt-4o-mini"
-MODEL_PROVIDER = "openai"
+
 APP_VERSION = 1.0
 RAG_SYSTEM_PROMPT = """You are an assistant for question-answering tasks. 
 Use the following pieces of retrieved context to answer the latest question in the conversation. 
@@ -18,48 +17,23 @@ If you don't know the answer, just say that you don't know.
 Use three sentences maximum and keep the answer concise.
 """
 
-openai_client = OpenAI()
+#llm_client = get_llm()
+#print("llm model " , llm_client)
+#nest_asyncio.apply()
+#web_url = "https://docs.smith.langchain.com/sitemap.xml"
+#retriever = retrieve_docs(web_url, is_sitemap_url=True)
+#print("llm model retriever " , retriever)
 
-def get_vector_db_retriever():
-    persist_path = os.path.join(tempfile.gettempdir(), "union.parquet")
-    embd = OpenAIEmbeddings()
+MODEL_NAME = "llama3.2"
+MODEL_PROVIDER = "Gool"
 
-    # If vector store exists, then load it
-    if os.path.exists(persist_path):
-        vectorstore = SKLearnVectorStore(
-            embedding=embd,
-            persist_path=persist_path,
-            serializer="parquet"
-        )
-        return vectorstore.as_retriever(lambda_mult=0)
-
-    # Otherwise, index LangSmith documents and create new vector store
-    ls_docs_sitemap_loader = SitemapLoader(web_path="https://docs.smith.langchain.com/sitemap.xml")
-    ls_docs = ls_docs_sitemap_loader.load()
-
-    text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
-        chunk_size=500, chunk_overlap=0
-    )
-    doc_splits = text_splitter.split_documents(ls_docs)
-
-    vectorstore = SKLearnVectorStore.from_documents(
-        documents=doc_splits,
-        embedding=embd,
-        persist_path=persist_path,
-        serializer="parquet"
-    )
-    vectorstore.persist()
-    return vectorstore.as_retriever(lambda_mult=0)
-
-nest_asyncio.apply()
-retriever = get_vector_db_retriever()
 
 """
 retrieve_documents
 - Returns documents fetched from a vectorstore based on the user's question
 """
 @traceable(run_type="chain")
-def retrieve_documents(question: str):
+def retrieve_documents(retriever, question: str):
     return retriever.invoke(question)
 
 """
@@ -67,7 +41,7 @@ generate_response
 - Calls `call_openai` to generate a model response after formatting inputs
 """
 @traceable(run_type="chain")
-def generate_response(question: str, documents):
+def generate_response(llm_client, question: str, documents):
     formatted_docs = "\n\n".join(doc.page_content for doc in documents)
     messages = [
         {
@@ -79,7 +53,7 @@ def generate_response(question: str, documents):
             "content": f"Context: {formatted_docs} \n\n Question: {question}"
         }
     ]
-    return call_openai(messages)
+    return call_model(llm_client, messages)
 
 """
 call_openai
@@ -92,11 +66,8 @@ call_openai
         "ls_model_name": MODEL_NAME
     }
 )
-def call_openai(messages: List[dict]) -> str:
-    return openai_client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=messages,
-    )
+def call_model(llm_client, messages: List[dict]) -> str:
+    return llm_client.invoke(messages)
 
 """
 langsmith_rag
@@ -105,7 +76,8 @@ langsmith_rag
 - Returns the model response
 """
 @traceable(run_type="chain")
-def langsmith_rag(question: str):
-    documents = retrieve_documents(question)
-    response = generate_response(question, documents)
-    return response.choices[0].message.content
+def langsmith_rag(question: str, llm_client, retriever):
+    
+    documents = retrieve_documents(retriever, question)
+    response = generate_response(llm_client, question, documents)
+    return response

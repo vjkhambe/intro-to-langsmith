@@ -11,3 +11,5 @@ lxml
 scikit-learn
 pandas
 pyarrow
+google-generativeai
+langchain_google_genai
